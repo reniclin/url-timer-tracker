@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>URL Time Tracker</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>URL Time Tracker</h2>
+
+      <div>
+        <div class="label">URL List (One per line, without https://)</div>
+        <div class="url-container">
+          <textarea
+            id="urlEditor"
+            class="url-editor"
+            spellcheck="false"
+          ></textarea>
+          <div id="validationError" class="validation-error"></div>
+          <button id="addCurrentButton" class="add-btn">Add Current Domain</button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <div>
+          <div class="label">Time Limit</div>
+          <input
+            type="time"
+            id="timeLimit"
+            class="time-picker"
+            value="00:30:00"
+            step="1"
+          />
+        </div>
+
+        <div>
+          <div class="label">Enable Tracking</div>
+          <label class="switch">
+            <input type="checkbox" id="toggleTracking" checked />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <button id="saveButton" class="save-btn">Save Settings</button>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

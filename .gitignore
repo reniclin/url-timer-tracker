@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# node/npm
+node_modules/
+
+# Chrome extension build outputs
+dist/
+build/
