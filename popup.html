@@ -9,6 +9,18 @@
     <div class="container">
       <h2>URL Time Tracker</h2>
 
+      <!-- Timer status section -->
+      <div class="timer-status">
+        <div class="status-row">
+          <span>Total Time:</span>
+          <span id="totalTime">00:00:00</span>
+        </div>
+        <div class="status-row">
+          <span>Time Left:</span>
+          <span id="timeLeft">00:00:00</span>
+        </div>
+      </div>
+
       <div>
         <div class="label">URL List (One per line, without https://)</div>
         <div class="url-container">
@@ -18,12 +30,14 @@
             spellcheck="false"
           ></textarea>
           <div id="validationError" class="validation-error"></div>
-          <button id="addCurrentButton" class="add-btn">Add Current Domain</button>
+          <button id="addCurrentButton" class="add-btn">
+            Add Current Domain
+          </button>
         </div>
       </div>
 
       <div class="control-row">
-        <div>
+        <div class="time-control">
           <div class="label">Time Limit</div>
           <input
             type="time"
@@ -34,12 +48,22 @@
           />
         </div>
 
-        <div>
-          <div class="label">Enable Tracking</div>
-          <label class="switch">
-            <input type="checkbox" id="toggleTracking" checked />
-            <span class="slider"></span>
-          </label>
+        <div class="toggles-container">
+          <div class="toggle-group">
+            <div class="label">Enable Tracking</div>
+            <label class="switch small">
+              <input type="checkbox" id="toggleTracking" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div class="toggle-group">
+            <div class="label">Show Timer Overlay</div>
+            <label class="switch small">
+              <input type="checkbox" id="showOverlay" checked />
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 

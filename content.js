@@ -9,6 +9,7 @@
     isEnabled: false,
     trackedUrls: [],
     timeLimit: '00:30:00',
+    showOverlay: true,
   };
 
   // DOM Elements
@@ -86,24 +87,46 @@
   }
 
   // Timer Management
-  function loadSettingsAndCheckUrl() {
-    chrome.storage.sync.get(
-      ['urlList', 'timeLimit', 'isEnabled'],
-      function (result) {
-        const prevTimeLimit = state.timeLimit;
-        state.isEnabled = result.isEnabled ?? true;
-        state.timeLimit = result.timeLimit ?? DEFAULT_TIME_LIMIT;
-        state.trackedUrls = parseUrlList(result.urlList);
+function loadSettingsAndCheckUrl() {
+  chrome.storage.sync.get(
+    ['urlList', 'timeLimit', 'isEnabled', 'showOverlay'],
+    function (result) {
+      const prevTimeLimit = state.timeLimit;
+      const prevShowOverlay = state.showOverlay;
 
-        // Handle time limit changes for active timer
-        if (timerElement && prevTimeLimit !== state.timeLimit) {
-          updateTimeLimitAndDisplay();
+      state.isEnabled = result.isEnabled ?? true;
+      state.timeLimit = result.timeLimit ?? DEFAULT_TIME_LIMIT;
+      state.showOverlay = result.showOverlay ?? true;
+      state.trackedUrls = parseUrlList(result.urlList);
+
+      // check showOverlay change
+      if (prevShowOverlay !== state.showOverlay) {
+        if (state.showOverlay) {
+          // if showOverlay is enabled, check if the current URL matches any tracked URLs
+          // and create or show the timer
+          const currentUrl = window.location.href.toLowerCase();
+          const matchedUrl = state.trackedUrls.find(
+            (url) => url.toLowerCase() && currentUrl.includes(url.toLowerCase())
+          );
+          if (matchedUrl) {
+            createOrShowTimer();
+          }
+        } else {
+          // if showOverlay is disabled, and not timeup, hide the timer
+          if (timerElement && state.countdownSeconds > 0) {
+            timerElement.style.display = 'none';
+          }
         }
-
-        checkCurrentUrl();
       }
-    );
-  }
+
+      if (timerElement && prevTimeLimit !== state.timeLimit) {
+        updateTimeLimitAndDisplay();
+      }
+
+      checkCurrentUrl();
+    }
+  );
+}
 
   function parseUrlList(urlList) {
     if (!urlList) return [];
@@ -128,13 +151,17 @@
   }
 
   function showTimerAndStart() {
-    createOrShowTimer();
+    if (state.showOverlay) {
+      createOrShowTimer();
+    }
+
     startTimer();
   }
 
   function hideTimerAndReset() {
     stopTimer();
     handleReset();
+
     if (timerElement) {
       timerElement.style.display = 'none';
     }
@@ -152,10 +179,31 @@
 
   function handleReset(resetTotal = true) {
     console.log('Reset timer');
+
+    // Add null check for timerElement
+    if (!timerElement) {
+      console.log('Timer element not found, skipping DOM updates');
+      if (resetTotal) {
+        resetTimerState();
+      } else {
+        const [hours, minutes, seconds] = state.timeLimit
+          .split(':')
+          .map(Number);
+        state.countdownSeconds = hours * 3600 + minutes * 60 + seconds;
+      }
+      return;
+    }
+
     const resetButton = timerElement.querySelector('.reset-button');
     const snoozeButton = timerElement.querySelector('.snooze-button');
-    resetButton.style.display = 'none';
-    snoozeButton.style.display = 'none';
+
+    if (resetButton) {
+      resetButton.style.display = 'none';
+    }
+
+    if (snoozeButton) {
+      snoozeButton.style.display = 'none';
+    }
 
     const warningElement = timerElement.querySelector('.timer-warning');
     if (warningElement) {
@@ -169,7 +217,12 @@
       const [hours, minutes, seconds] = state.timeLimit.split(':').map(Number);
       state.countdownSeconds = hours * 3600 + minutes * 60 + seconds;
     }
+
     updateTimerDisplay();
+
+    if (!state.showOverlay) {
+      timerElement.style.display = 'none';
+    }
   }
 
   function createOrShowTimer() {
@@ -312,6 +365,11 @@
     state.totalSeconds = 0;
     const [hours, minutes, seconds] = state.timeLimit.split(':').map(Number);
     state.countdownSeconds = hours * 3600 + minutes * 60 + seconds;
+
+    chrome.storage.sync.set({
+      totalSeconds: state.totalSeconds,
+      countdownSeconds: state.countdownSeconds,
+    });
   }
 
   function updateTimeLimitAndDisplay() {
@@ -351,9 +409,15 @@
 
     totalTimeElement.textContent = formatTime(state.totalSeconds);
     countdownTimeElement.textContent = formatTime(state.countdownSeconds);
+
+    chrome.storage.sync.set({
+      totalSeconds: state.totalSeconds,
+      countdownSeconds: state.countdownSeconds,
+    });
   }
 
   function showTimeUpWarning() {
+    createOrShowTimer(); // Always show timer when time is up
     if (timerElement.querySelector('.timer-warning')) {
       return;
     }
